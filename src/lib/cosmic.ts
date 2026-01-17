@@ -1,5 +1,5 @@
 import { createBucketClient } from '@cosmicjs/sdk';
-import type { Post, Author, Category } from '../types';
+import type { Post, Author, Category, AboutPage } from '../types';
 import { hasStatus } from '../types';
 
 export const cosmic = createBucketClient({
@@ -154,6 +154,24 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
       return null;
     }
     console.error('Error fetching category:', error);
+    return null;
+  }
+}
+
+// Fetch About page content
+export async function getAboutPage(): Promise<AboutPage | null> {
+  try {
+    const response = await cosmic.objects
+      .findOne({ type: 'about-pages', slug: 'about' })
+      .props(['id', 'title', 'slug', 'metadata'])
+      .depth(1);
+    
+    return response.object as AboutPage;
+  } catch (error) {
+    if (hasStatus(error) && error.status === 404) {
+      return null;
+    }
+    console.error('Error fetching about page:', error);
     return null;
   }
 }
