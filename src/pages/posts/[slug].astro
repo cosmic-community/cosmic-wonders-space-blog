@@ -1,0 +1,143 @@
+---
+// src/pages/posts/[slug].astro
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import CategoryBadge from '../../components/CategoryBadge.astro';
+import { getPosts, getPostBySlug } from '../../lib/cosmic';
+import type { Post } from '../../types';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/404');
+}
+
+const post = await getPostBySlug(slug);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const imageUrl = post.metadata?.featured_image?.imgix_url;
+const author = post.metadata?.author;
+const categories = post.metadata?.categories || [];
+const content = post.metadata?.content || '';
+
+// Simple markdown to HTML conversion
+function parseMarkdown(markdown: string): string {
+  return markdown
+    // Headers
+    .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mt-8 mb-4">$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-10 mb-4">$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mt-12 mb-6">$1</h1>')
+    // Bold
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    // Links
+    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" class="text-cosmic-400 hover:text-cosmic-300 underline">$1</a>')
+    // Line breaks and paragraphs
+    .split('\n\n')
+    .map(para => {
+      if (para.startsWith('<h') || para.trim() === '') return para;
+      return `<p class="mb-4 text-white/85 leading-relaxed">${para}</p>`;
+    })
+    .join('\n');
+}
+
+const htmlContent = parseMarkdown(content);
+---
+
+<Layout 
+  title={post.metadata?.title || post.title}
+  description={post.metadata?.excerpt}
+  image={imageUrl ? `${imageUrl}?w=1200&h=630&fit=crop&auto=format,compress` : undefined}
+>
+  <Header />
+  
+  <main class="pb-16">
+    <!-- Hero Image -->
+    {imageUrl && (
+      <div class="relative h-[40vh] md:h-[50vh] lg:h-[60vh] overflow-hidden">
+        <img
+          src={`${imageUrl}?w=1920&h=1080&fit=crop&auto=format,compress`}
+          alt={post.title}
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-indigo-950 via-indigo-950/50 to-transparent"></div>
+      </div>
+    )}
+    
+    <article class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 z-10">
+      <div class="bg-indigo-950/90 backdrop-blur-xl rounded-2xl border border-white/10 p-8 md:p-12">
+        <!-- Categories -->
+        {categories.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-6">
+            {categories.map((category) => (
+              <CategoryBadge category={category} clickable />
+            ))}
+          </div>
+        )}
+        
+        <!-- Title -->
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
+          {post.metadata?.title || post.title}
+        </h1>
+        
+        <!-- Author -->
+        {author && (
+          <div class="flex items-center gap-4 mb-8 pb-8 border-b border-white/10">
+            <a href={`/authors/${author.slug}`} class="flex items-center gap-4 group">
+              {author.metadata?.avatar?.imgix_url ? (
+                <img
+                  src={`${author.metadata.avatar.imgix_url}?w=96&h=96&fit=crop&auto=format,compress`}
+                  alt={author.metadata?.name || author.title}
+                  class="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-cosmic-400 transition-all"
+                />
+              ) : (
+                <div class="w-12 h-12 rounded-full bg-cosmic-600 flex items-center justify-center ring-2 ring-white/10 group-hover:ring-cosmic-400 transition-all">
+                  <span class="text-lg font-bold text-white">
+                    {(author.metadata?.name || author.title).charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div>
+                <p class="font-semibold text-white group-hover:text-cosmic-300 transition-colors">
+                  {author.metadata?.name || author.title}
+                </p>
+                {author.metadata?.bio && (
+                  <p class="text-sm text-white/60 line-clamp-1">
+                    {author.metadata.bio}
+                  </p>
+                )}
+              </div>
+            </a>
+          </div>
+        )}
+        
+        <!-- Content -->
+        <div class="prose prose-lg prose-invert max-w-none" set:html={htmlContent} />
+        
+        <!-- Back Link -->
+        <div class="mt-12 pt-8 border-t border-white/10">
+          <a href="/" class="inline-flex items-center gap-2 text-cosmic-400 hover:text-cosmic-300 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to all articles
+          </a>
+        </div>
+      </div>
+    </article>
+  </main>
+  
+  <Footer />
+</Layout>

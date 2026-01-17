@@ -1,0 +1,96 @@
+---
+// src/components/Navigation.astro
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/authors', label: 'Authors' },
+];
+
+function isActive(href: string): boolean {
+  if (href === '/') {
+    return currentPath === '/';
+  }
+  return currentPath.startsWith(href);
+}
+---
+
+<nav class="hidden md:flex items-center gap-1">
+  {navItems.map((item) => (
+    <a
+      href={item.href}
+      class:list={[
+        'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+        isActive(item.href)
+          ? 'bg-white/10 text-white'
+          : 'text-white/70 hover:text-white hover:bg-white/5'
+      ]}
+    >
+      {item.label}
+    </a>
+  ))}
+</nav>
+
+<!-- Mobile menu button -->
+<button
+  id="mobile-menu-button"
+  class="md:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+  aria-label="Toggle menu"
+>
+  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
+
+<!-- Mobile menu -->
+<div id="mobile-menu" class="hidden fixed inset-0 z-50 md:hidden">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" id="mobile-menu-overlay"></div>
+  <div class="fixed top-0 right-0 w-64 h-full bg-indigo-950 shadow-xl p-6">
+    <button
+      id="mobile-menu-close"
+      class="absolute top-4 right-4 p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+      aria-label="Close menu"
+    >
+      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <nav class="mt-8 flex flex-col gap-2">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class:list={[
+            'px-4 py-3 rounded-lg text-base font-medium transition-all duration-200',
+            isActive(item.href)
+              ? 'bg-white/10 text-white'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          ]}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</div>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuButton = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+    const menuClose = document.getElementById('mobile-menu-close');
+    const menuOverlay = document.getElementById('mobile-menu-overlay');
+    
+    function openMenu() {
+      if (menu) menu.classList.remove('hidden');
+    }
+    
+    function closeMenu() {
+      if (menu) menu.classList.add('hidden');
+    }
+    
+    if (menuButton) menuButton.addEventListener('click', openMenu);
+    if (menuClose) menuClose.addEventListener('click', closeMenu);
+    if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
+  });
+</script>
