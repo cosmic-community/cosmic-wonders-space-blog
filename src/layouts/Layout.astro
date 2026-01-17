@@ -1,5 +1,4 @@
 ---
-// src/layouts/Layout.astro
 export interface Props {
   title: string;
   description?: string;
@@ -46,6 +45,8 @@ const bucketSlug = import.meta.env.COSMIC_BUCKET_SLUG as string;
     <!-- Star background effect -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
       <div class="stars"></div>
+      <div class="big-stars"></div>
+      <div class="comet"></div>
     </div>
     
     <div class="relative z-10">
@@ -97,9 +98,90 @@ const bucketSlug = import.meta.env.COSMIC_BUCKET_SLUG as string;
         animation: twinkle 8s ease-in-out infinite;
       }
       
+      .big-stars {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: 
+          radial-gradient(3px 3px at 15% 20%, rgba(255,255,255,0.9), transparent),
+          radial-gradient(4px 4px at 85% 30%, rgba(255,255,255,1), transparent),
+          radial-gradient(3px 3px at 40% 60%, rgba(255,255,255,0.85), transparent),
+          radial-gradient(4px 4px at 70% 80%, rgba(255,255,255,0.95), transparent),
+          radial-gradient(3px 3px at 25% 90%, rgba(255,255,255,0.9), transparent),
+          radial-gradient(4px 4px at 90% 15%, rgba(255,255,255,1), transparent),
+          radial-gradient(3px 3px at 50% 40%, rgba(255,255,255,0.85), transparent),
+          radial-gradient(4px 4px at 10% 70%, rgba(255,255,255,0.95), transparent);
+        animation: pulse-stars 4s ease-in-out infinite;
+      }
+      
+      .comet {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 
+          0 0 8px 2px rgba(255,255,255,0.8),
+          0 0 16px 4px rgba(139, 92, 246, 0.6);
+        opacity: 0;
+        animation: comet-fly 15s linear infinite;
+      }
+      
+      .comet::before {
+        content: '';
+        position: absolute;
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, 
+          rgba(255,255,255,0.8) 0%, 
+          rgba(139, 92, 246, 0.4) 50%, 
+          transparent 100%);
+        right: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 50%;
+      }
+      
       @keyframes twinkle {
         0%, 100% { opacity: 0.5; }
         50% { opacity: 1; }
+      }
+      
+      @keyframes pulse-stars {
+        0%, 100% { 
+          opacity: 0.6;
+          transform: scale(1);
+        }
+        50% { 
+          opacity: 1;
+          transform: scale(1.2);
+        }
+      }
+      
+      @keyframes comet-fly {
+        0% {
+          top: -5%;
+          left: 100%;
+          opacity: 0;
+          transform: rotate(-45deg);
+        }
+        5% {
+          opacity: 1;
+        }
+        25% {
+          top: 30%;
+          left: 60%;
+          opacity: 1;
+        }
+        30% {
+          opacity: 0;
+        }
+        100% {
+          top: 105%;
+          left: -10%;
+          opacity: 0;
+          transform: rotate(-45deg);
+        }
       }
       
       .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
